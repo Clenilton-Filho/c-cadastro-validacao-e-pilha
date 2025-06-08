@@ -19,8 +19,27 @@ typedef struct NO{
 //declarando o nó cabeça como NULL e global
 NO *pilha_cadastros = NULL;
 
+void imprimir(){
+    NO *aux = pilha_cadastros;
+    int contador = 1;
+    
+    printf("\nImprimindo dados");
+    
+    while (aux != NULL){
+        printf("\nIndividuo %d\n",contador);
+        printf("Nome: %s\n",aux->dados_individuo.nome);
+        printf("CPF: %s\n",aux->dados_individuo.CPF);
+        printf("Idade: %d\n",aux->dados_individuo.idade);
+        printf("Altura: %.2f\n",aux->dados_individuo.altura);
+        
+        contador++;
+        aux = aux->proximo;
+    }
+    
+}
+
 //função para adicionar itens à lista encadeada (pilha)
-void empilhar(char nome[20], char CPF[11], int idade, float altura){
+void empilhar(char nome[], char CPF[], int idade, float altura){
     //declarando o novo nó que será empilhado
     NO *novo_no = (NO*)malloc(sizeof(NO));
     
@@ -43,18 +62,97 @@ void desempilhar(){
     //se a lista estiver vazia, apresenta uma mensagem e sai da função
     if (pilha_cadastros == NULL){
         printf("Lista vazia! Adicione pelo menos um nó para realizar essa operação.");
-        return;
+    }else{
+        //declarando um nó auxiliar para guardar o endereço do nó cabeça atual
+        NO *auxiliar = pilha_cadastros;
+        
+        //o nó cabeça atual é atualizado para o ponteiro dentro do nó cabeça
+        pilha_cadastros = pilha_cadastros->proximo;
+        
+        //liberando a memória onde estava o nó cabeça anteriormente
+        free(auxiliar);
     }
-    //declarando um nó auxiliar para guardar o endereço do nó cabeça atual
-    NO *auxiliar = pilha_cadastros;
-    
-    //o nó cabeça atual é atualizado para o ponteiro dentro do nó cabeça
-    pilha_cadastros = pilha_cadastros->proximo;
-    
-    //liberando a memória onde estava o nó cabeça anteriormente
-    free(auxiliar);
 }
 
+//ordenação por altura em bubblesort que troca somente os dados de indivíduo dentro dos nós
+void ordenar_por_altura(){
+    NO *auxiliar;
+    INDIVIDUO dados_anterior;
+    float valor_1;
+    float valor_2;
+    int trocou;
+    
+    //executa pelo menos uma vez e até que o bloco não tenha trocado os dados
+    do{
+        //'trocou' inicializa em cada loop como falso (0)
+        trocou = 0;
+        
+        auxiliar = pilha_cadastros;
+        while(auxiliar->proximo != NULL){
+            //valor 1 recebe o atual
+            valor_1 = auxiliar->dados_individuo.altura;
+            
+            //valor 2 recebe o próximo
+            valor_2 = auxiliar->proximo->dados_individuo.altura;
+            
+            //se o atual for maior que o próximo, troca os dados dos nós e marca 'trocou' como verdadeiro (1)
+            if(valor_1>valor_2){
+                
+                //os dados atuais são armazenados
+                dados_anterior = auxiliar->dados_individuo;
+                
+                //os dados do atual vão ser trocados pelo do próximo
+                auxiliar->dados_individuo = auxiliar->proximo->dados_individuo;
+                auxiliar->proximo->dados_individuo = dados_anterior;
+                trocou = 1;
+            }
+            //avança o atual
+            auxiliar = auxiliar->proximo;
+        }
+        imprimir();
+    }while(trocou == 1);
+}
+
+//ordenação por idade em selection sort que também só troca os dados dos nós
+void ordenar_por_idade(){
+    NO *auxiliar = pilha_cadastros;
+    NO *auxiliar_2;
+    NO *menor;
+    INDIVIDUO dados_temporarios;
+    
+    //o while externo para quando o atual for nulo, que é quando a lista está ordenada (o loop interno já foi executado para cada posição da lista)
+    while(auxiliar != NULL){
+        
+        //o menor vai ser sempre inicializado em cada loop externo como o atual 
+        menor = auxiliar;
+        
+        //o auxiliar 2 é inicializado como o próximo do atual
+        auxiliar_2 = auxiliar->proximo;
+        
+        //o while interno percorre a lista do atual até o último e tenta achar uma idade menor que a atual
+        while(auxiliar_2 != NULL){
+            
+            //se achar, atualiza o valor de menor para o que está no auxiliar 2
+            if(auxiliar_2->dados_individuo.idade<menor->dados_individuo.idade){
+                menor = auxiliar_2;
+            }
+            
+            //avança o auxiliar 2
+            auxiliar_2 = auxiliar_2->proximo;
+        }
+        
+        //troca os dados entre o menor que foi encontrado pelo loop interno e o atual
+        dados_temporarios = auxiliar->dados_individuo;
+        auxiliar->dados_individuo = menor->dados_individuo;
+        menor->dados_individuo = dados_temporarios;
+        
+        
+        imprimir();
+        
+        //avança o atual
+        auxiliar = auxiliar->proximo;
+    }
+}
 
 //função para migrar os cadastros do vetor para a lista encadeada
 void migrar(INDIVIDUO *lista_individuos,int qtd_cadastros){
@@ -180,8 +278,16 @@ int main(){
     
     //Apresentando o programa e recebendo a quantidade de cadastros
     printf("Bem vindo ao sistema de cadastros!\n");
-    printf("Deseja cadastrar quantos individuos: ");
-    scanf("%d",&qtd_cadastros);
+    
+    
+    //só segue caso a quantidade de cadastros for maior que 0
+    while (qtd_cadastros<=0){
+        printf("Deseja cadastrar quantos individuos: ");
+        scanf("%d",&qtd_cadastros);
+        if(qtd_cadastros<=0){
+            printf("Quantidade tem que ser maior que zero!\n");
+        }
+    }
     
     //alocando o tamanho recebido para o vetor dinâmico
     lista_individuos = (INDIVIDUO*)malloc(qtd_cadastros * sizeof(INDIVIDUO));
@@ -201,6 +307,8 @@ int main(){
     empilhar("Ana","11111111111",31,1.67);
     empilhar("Pedro","22222222222",45,1.78);
     
+    ordenar_por_altura();
+    ordenar_por_idade();
     
     return 0;
 }
